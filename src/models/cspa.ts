@@ -1,26 +1,26 @@
 import { DateTime } from 'luxon';
 
-type Preference = "F1"
+export type Preference = "F1"
     | "F2A"
     | "F2B"
     | "F3"
     | "F4"
 
-interface Age {
+export interface Age {
     Days: number
     Months: number
     Years: number
 }
 
-interface CspaResults {
+export interface CspaResults {
     daysPending: number
     daysTotal: number
     cspaAge: Age
     actualAge: Age
 }
 
-// dates automatically updated to reflect visa bulletin
-// date formatting roughly reflects the formatting of the bulletin dates
+// dates automatically updated to reflect visa bulletin (formatting roughly reflects the formatting of the bulletin dates)
+// TODO: set a cron job w/ gh-actions to scrape bulletin and automatically update these values monthly
 const visaBulletinDates = new Map<Preference, DateTime>([
     ["F1", DateTime.fromFormat('01-03-2012', 'dd-MM-yyyy')],
     ["F2A", DateTime.now()],
@@ -51,9 +51,19 @@ const calcCspaAge = (birthDate: DateTime, priorityDate: DateTime, approvalDate: 
     }
 }
 
-const calcCspaAgeFromPreference = (birthDate: DateTime, priorityDate: DateTime, approvalDate: DateTime, preference: Preference): CspaResults | undefined => {
+const isValidDate = (date: DateTime | null): boolean => {
+    return date != null && date.isValid
+}
+
+const calcCspaAgeFromPreference = (birthDate: DateTime | null, priorityDate: DateTime | null, approvalDate: DateTime | null, preference: Preference): CspaResults | undefined => {
+    // TODO: we need to perform further input validation (e.g. a birthdate occuring after a priority date)
+    if (!isValidDate(birthDate) || !isValidDate(priorityDate) || !isValidDate(approvalDate)) {
+        return
+    }
+
     const bulletinDate = visaBulletinDates.get(preference)
     if (bulletinDate) {
+        // @ts-ignore (typescript can't pick up the earlier null validation check)
         return calcCspaAge(birthDate, priorityDate, approvalDate, bulletinDate)
     }
     return

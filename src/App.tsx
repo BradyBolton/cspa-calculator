@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { DateTime } from "luxon";
 
 import CustomizedAccordion from './CustomizedAccordion';
+import { calcCspaAgeFromPreference, Preference } from './models/cspa';
 
 // TODO: not sure if I like this date picker (I really dislike how it handles backspaces)
 // alternative date-picker that behaves more expetedly: https://reactdatepicker.com/ 
@@ -33,13 +34,13 @@ const visaBulletinHref = "https://travel.state.gov/content/travel/en/legal/visa-
 
 function App() {
   const [sponsorship, setSponsorship] = useState('family');
-  const [preference, setPreference] = useState('F1');
+  const [preference, setPreference] = useState<Preference>('F1');
   const [birthDate, setBirthDate] = useState<DateTime | null>(null);
   const [priorityDate, setPriorityDate] = useState<DateTime | null>(null);
   const [approvalDate, setApprovalDate] = useState<DateTime | null>(null);
 
   const handleChange = (event: SelectChangeEvent) => {
-    setPreference(event.target.value);
+    setPreference(event.target.value as Preference);
   };
 
   const handleChangeRadio = (event: SelectChangeEvent) => {
@@ -53,6 +54,8 @@ function App() {
     setPreference("F1")
     setSponsorship("family")
   }
+
+  let cspaResults = calcCspaAgeFromPreference(birthDate, priorityDate, approvalDate, preference)
 
   return (
     <>
@@ -152,7 +155,7 @@ function App() {
               </Box>
             </Paper>
           </Stack>
-          <Alert sx={{ mb: 2 }} variant="filled" severity="success">Good news! You can get your visa on XX/XX/XXXX!</Alert>
+          <Alert sx={{ mb: 2 }} variant="filled" severity="success">{cspaResults != null ? JSON.stringify(cspaResults) : "Invalid input"}</Alert>
         </Container>
       </ScopedCssBaseline>
     </ >
