@@ -6,7 +6,8 @@ import { DateTime } from "luxon";
 
 import CustomizedAccordion from './CustomizedAccordion';
 
-// import components
+// TODO: not sure if I like this date picker (I really dislike how it handles backspaces)
+// alternative date-picker that behaves more expetedly: https://reactdatepicker.com/ 
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import ScopedCssBaseline from '@mui/material/ScopedCssBaseline';
 import {
@@ -25,20 +26,34 @@ import {
   MenuItem,
   Select,
   SelectChangeEvent,
+  // RadioChangeEvent,
   Typography,
 } from '@mui/material';
 
+const visaBulletinHref = "https://travel.state.gov/content/travel/en/legal/visa-law0/visa-bulletin.html"
 
 function App() {
-
+  const [sponsorship, setSponsorship] = useState('family');
   const [preference, setPreference] = useState('F1');
-  const [birthDate, setBirthDate] = useState('');
-  const [priorityDate, setPriorityDate] = useState('');
-  const [approvalDate, setApprovalDate] = useState('');
+  const [birthDate, setBirthDate] = useState<DateTime | null>(null);
+  const [priorityDate, setPriorityDate] = useState<DateTime | null>(null);
+  const [approvalDate, setApprovalDate] = useState<DateTime | null>(null);
 
   const handleChange = (event: SelectChangeEvent) => {
     setPreference(event.target.value);
   };
+
+  const handleChangeRadio = (event: SelectChangeEvent) => {
+    setSponsorship(event.target.value);
+  };
+
+  const onClickHandler = () => {
+    setBirthDate(null)
+    setPriorityDate(null)
+    setApprovalDate(null)
+    setPreference("F1")
+    setSponsorship("family")
+  }
 
   return (
     <>
@@ -49,7 +64,7 @@ function App() {
               <Box sx={{ display: "flex", flexDirection: "column" }}>
                 <Typography sx={{ mb: 1 }} variant="h4">CSPA Calculator</Typography>
                 <Typography sx={{ mb: 1 }} >
-                  Fill in all fields to calculate your CSPA situation.
+                  Fill in all fields to calculate your CSPA situation. The calculator should automatically use data from the <a href={visaBulletinHref}>Visa Bulletin</a>.
                 </Typography>
                 <CustomizedAccordion label="How do I use this calculator?">
                   <div>
@@ -67,15 +82,36 @@ function App() {
               <Box sx={{ display: "flex", flexDirection: "column", pt: 2, alignItems: "center" }}>
                 <Box sx={{ display: "flex", flexWrap: "wrap", justifyContent: "center" }}>
                   <FormControl sx={{ m: 1, minWidth: 120 }}>
-                    <DatePicker label="Date of Birth" />
+                    <DatePicker
+                      label="Date of Birth"
+                      format="MM/dd/yyyy"
+                      value={birthDate}
+                      onChange={(newValue) => {
+                        setBirthDate(newValue);
+                      }}
+                    />
                   </FormControl>
 
                   <FormControl sx={{ m: 1, minWidth: 120 }}>
-                    <DatePicker label="Priority Date" />
+                    <DatePicker
+                      label="Priority Date"
+                      format="MM/dd/yyyy"
+                      value={priorityDate}
+                      onChange={(newValue) => {
+                        setPriorityDate(newValue);
+                      }}
+                    />
                   </FormControl>
 
                   <FormControl sx={{ m: 1, minWidth: 120 }}>
-                    <DatePicker label="Approval Date" />
+                    <DatePicker
+                      label="Approval Date"
+                      format="MM/dd/yyyy"
+                      value={approvalDate}
+                      onChange={(newValue) => {
+                        setApprovalDate(newValue);
+                      }}
+                    />
                   </FormControl>
                 </Box>
 
@@ -83,9 +119,10 @@ function App() {
                   <FormControl>
                     <FormLabel id="sponsorship-radio-buttons-group-label">Sponsorship Type</FormLabel>
                     <RadioGroup
-                      defaultValue="family"
                       name="radio-buttons-group"
                       row
+                      value={sponsorship}
+                      onChange={handleChangeRadio}
                     >
                       <FormControlLabel value="family" control={<Radio />} label="Family" />
                       <FormControlLabel value="employer" control={<Radio />} label="Employer" />
@@ -112,7 +149,7 @@ function App() {
                     </Select>
                   </FormControl>
                 </Box>
-                <Button variant="contained" sx={{ m: 1 }}>Reset Calculator</Button>
+                <Button variant="contained" sx={{ m: 1 }} onClick={onClickHandler}>Reset Calculator</Button>
               </Box>
             </Paper>
           </Stack>
