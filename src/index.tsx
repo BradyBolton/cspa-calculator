@@ -49,6 +49,7 @@ const getDesignTokens = (mode: PaletteMode) => ({
         },
       }),
   },
+  /*
   typography: {
     body1: {
       fontSize: '1.1rem',
@@ -57,6 +58,7 @@ const getDesignTokens = (mode: PaletteMode) => ({
       fontSize: '1.1rem',
     },
   },
+  */
 });
 
 const AppWrapper: FC = () => {
