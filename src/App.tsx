@@ -176,7 +176,7 @@ function App() {
                   </Box>
 
                   <Box sx={{ display: "flex", flexWrap: "wrap", justifyContent: "space-evenly", alignItems: "center" }}>
-                    <FormControl sx={{ mt: 2, mb: 2, minWidth: 80 }}>
+                    <FormControl sx={{ mt: 2, mb: 2, minWidth: 90 }}>
                       <InputLabel id="demo-simple-select-autowidth-label">Preference</InputLabel>
                       <Select
                         labelId="preference-select-label"
