@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/cspa-calculator/static/css/main.c0cc2712.css",
-    "main.js": "/cspa-calculator/static/js/main.e0e8f679.js",
+    "main.js": "/cspa-calculator/static/js/main.117fa113.js",
     "index.html": "/cspa-calculator/index.html",
     "main.c0cc2712.css.map": "/cspa-calculator/static/css/main.c0cc2712.css.map",
-    "main.e0e8f679.js.map": "/cspa-calculator/static/js/main.e0e8f679.js.map"
+    "main.117fa113.js.map": "/cspa-calculator/static/js/main.117fa113.js.map"
   },
   "entrypoints": [
     "static/css/main.c0cc2712.css",
-    "static/js/main.e0e8f679.js"
+    "static/js/main.117fa113.js"
   ]
 }
