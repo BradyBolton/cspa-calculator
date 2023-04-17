@@ -1,11 +1,11 @@
 import './App.css';
 
-import React, { useState } from 'react';
-
+import React, { useEffect, useState } from 'react';
+import Papa from 'papaparse';
 import { DateTime } from "luxon";
 
 import CustomizedAccordion from './CustomizedAccordion';
-import { calcCspaAgeFromPreference, CspaResults, Preference } from './models/cspa';
+import { CspaCalculator, VisaBulletinRow, CspaResults, Preference, Country } from './models/cspa';
 
 // TODO: not sure if I like this date picker (I really dislike how it handles backspaces)
 // alternative date-picker that behaves more expetedly: https://reactdatepicker.com/ 
@@ -33,17 +33,38 @@ import {
 
 const visaBulletinHref = "https://travel.state.gov/content/travel/en/legal/visa-law0/visa-bulletin.html"
 
+// TODO: support reading different from different tables
+const bulletinDataUrl = "https://bradybolton.github.io/cspa-calculator/data/family_a.csv"
+
 function App() {
   const [sponsorship, setSponsorship] = useState('family');
   const [preference, setPreference] = useState<Preference>('F1');
+  const [country, setCountry] = useState<Country>('other');
   const [birthDate, setBirthDate] = useState<DateTime | null>(null);
   const [priorityDate, setPriorityDate] = useState<DateTime | null>(null);
   const [approvalDate, setApprovalDate] = useState<DateTime | null>(null);
   const [cspaResult, setCspaResult] = useState<CspaResults | null>(null);
+  const [calculator, setCalculator] = useState<CspaCalculator>(new CspaCalculator([]));
+
+  useEffect(() => {
+    const csvData = Papa.parse<VisaBulletinRow>(bulletinDataUrl, {
+      header: true,
+      skipEmptyLines: true,
+      download: true,
+      complete: response => {
+        setCalculator(new CspaCalculator(response.data))
+      }
+    });
+  }, [])
 
   const handleChangePreference = (event: SelectChangeEvent) => {
     setPreference(event.target.value as Preference);
-    setCspaResult(calcCspaAgeFromPreference(birthDate, priorityDate, approvalDate, event.target.value as Preference))
+    setCspaResult(calculator.calcCspaAgeFromPreference(birthDate, priorityDate, approvalDate, event.target.value as Preference, country))
+  };
+
+  const handleChangeCountry = (event: SelectChangeEvent) => {
+    setCountry(event.target.value as Country);
+    setCspaResult(calculator.calcCspaAgeFromPreference(birthDate, priorityDate, approvalDate, preference, event.target.value as Country))
   };
 
   const handleChangeSponsorship = (event: SelectChangeEvent) => {
@@ -56,11 +77,12 @@ function App() {
     setApprovalDate(null)
     setPreference("F1")
     setSponsorship("family")
+    setCountry("other")
     setCspaResult(null)
   }
 
   const onClickSubmitHandler = () => {
-    setCspaResult(calcCspaAgeFromPreference(birthDate, priorityDate, approvalDate, preference))
+    setCspaResult(calculator.calcCspaAgeFromPreference(birthDate, priorityDate, approvalDate, preference, country))
   }
 
 
@@ -133,44 +155,65 @@ function App() {
                 </Box>
 
                 <Box sx={{ display: "flex", flexWrap: "wrap", justifyContent: "space-evenly", alignItems: "center" }}>
-                  <FormControl>
-                    <FormLabel id="sponsorship-radio-buttons-group-label">Sponsorship Type</FormLabel>
-                    <RadioGroup
-                      name="radio-buttons-group"
-                      row
-                      value={sponsorship}
-                      onChange={handleChangeSponsorship}
-                    >
-                      <FormControlLabel value="family" control={<Radio />} label="Family" />
-                      {/* TODO: enable the employer option and support more sponsorships/preferences */}
-                      <Tooltip title="Not supported yet!" followCursor={true} arrow>
-                        <span>
-                          <FormControlLabel value="employer" control={<Radio />} label="Employer" disabled />
-                        </span>
-                      </Tooltip>
-                    </RadioGroup>
-                  </FormControl>
+                  <Box>
+                    <FormControl>
+                      <FormLabel id="sponsorship-radio-buttons-group-label">Sponsorship Type</FormLabel>
+                      <RadioGroup
+                        name="radio-buttons-group"
+                        row
+                        value={sponsorship}
+                        onChange={handleChangeSponsorship}
+                      >
+                        <FormControlLabel value="family" control={<Radio />} label="Family" />
+                        {/* TODO: enable the employer option and support more sponsorships/preferences */}
+                        <Tooltip title="Not supported yet!" followCursor={true} arrow>
+                          <span>
+                            <FormControlLabel value="employer" control={<Radio />} label="Employer" disabled />
+                          </span>
+                        </Tooltip>
+                      </RadioGroup>
+                    </FormControl>
+                  </Box>
 
-                  <FormControl sx={{ mt: 2, mb: 2, minWidth: 80 }}>
-                    <InputLabel id="demo-simple-select-autowidth-label">Preference</InputLabel>
-                    <Select
-                      labelId="preference-select-label"
-                      id="preference-select"
-                      value={preference}
-                      onChange={handleChangePreference}
-                      label="Preference"
-                      size="small"
-                    >
-                      <MenuItem value={"F1"}>F1</MenuItem>
-                      <MenuItem value={"F2A"}>F2A</MenuItem>
-                      <MenuItem value={"F2B"}>F2B</MenuItem>
-                      <MenuItem value={"F3"}>F3</MenuItem>
-                      <MenuItem value={"F4"}>F4</MenuItem>
-                    </Select>
-                  </FormControl>
+                  <Box sx={{ display: "flex", flexWrap: "wrap", justifyContent: "space-evenly", alignItems: "center" }}>
+                    <FormControl sx={{ mt: 2, mb: 2, minWidth: 80 }}>
+                      <InputLabel id="demo-simple-select-autowidth-label">Preference</InputLabel>
+                      <Select
+                        labelId="preference-select-label"
+                        id="preference-select"
+                        value={preference}
+                        onChange={handleChangePreference}
+                        label="Preference"
+                        size="small"
+                      >
+                        <MenuItem value={"F1"}>F1</MenuItem>
+                        <MenuItem value={"F2A"}>F2A</MenuItem>
+                        <MenuItem value={"F2B"}>F2B</MenuItem>
+                        <MenuItem value={"F3"}>F3</MenuItem>
+                        <MenuItem value={"F4"}>F4</MenuItem>
+                      </Select>
+                    </FormControl>
+                    <FormControl sx={{ mt: 2, mb: 2, ml: 2, width: 110 }}>
+                      <InputLabel id="demo-simple-select-autowidth-label">Country</InputLabel>
+                      <Select
+                        labelId="preference-select-label"
+                        id="preference-select"
+                        value={country}
+                        onChange={handleChangeCountry}
+                        label="Country"
+                        size="small"
+                      >
+                        <MenuItem value={"china"}>China</MenuItem>
+                        <MenuItem value={"india"}>India</MenuItem>
+                        <MenuItem value={"mexico"}>Mexico</MenuItem>
+                        <MenuItem value={"philippines"}>Philippines</MenuItem>
+                        <MenuItem value={"other"}>Other</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Box>
                 </Box>
                 <Box sx={{ display: "flex", flexWrap: "wrap", justifyContent: "space-evenly", alignItems: "center" }} >
-                  <Button variant="contained" sx={{ m: 1 }} color="primary" onClick={onClickSubmitHandler}>Submit</Button>
+                  <Button variant="contained" sx={{ m: 1 }} color="primary" onClick={onClickSubmitHandler}>Calculate</Button>
                   <Button variant="contained" sx={{ m: 1 }} color="secondary" onClick={onClickResetHandler}>Reset Calculator</Button>
                 </Box>
               </Box>
